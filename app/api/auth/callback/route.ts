@@ -2,28 +2,56 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
-  const code = searchParams.get('code')
-  // 如果配置了 "next" 参数,则在登录后将用户重定向到该 URL
-  const next = searchParams.get('next') ?? '/'
+  const requestUrl = new URL(request.url)
+  const code = requestUrl.searchParams.get('code')
+  const next = requestUrl.searchParams.get('next') ?? '/'
 
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
+
     if (!error) {
-      const forwardedHost = request.headers.get('x-forwarded-host') // 在部署时为原始主机
-      const isLocalEnv = process.env.NODE_ENV === 'development'
-      if (isLocalEnv) {
-        // 在开发环境中,我们可以直接重定向到本地主机
-        return NextResponse.redirect(`${origin}${next}`)
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`)
-      } else {
-        return NextResponse.redirect(`${origin}${next}`)
-      }
+      // 获取正确的重定向 URL
+      const redirectUrl = getRedirectUrl(request, next)
+      return NextResponse.redirect(redirectUrl)
     }
   }
 
-  // 返回用户到错误页面,并包含错误描述
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+  // 返回用户到错误页面
+  const errorUrl = getRedirectUrl(request, '/auth/auth-code-error')
+  return NextResponse.redirect(errorUrl)
+}
+
+function getRedirectUrl(request: Request, path: string): string {
+  // 尝试多种方式获取正确的主机名
+  const forwardedHost = request.headers.get('x-forwarded-host')
+  const forwardedProto = request.headers.get('x-forwarded-proto')
+  const host = request.headers.get('host')
+
+  // 开发环境
+  if (process.env.NODE_ENV === 'development') {
+    return `http://localhost:3000${path}`
+  }
+
+  // 生产环境 - 优先使用 forwarded headers
+  if (forwardedHost) {
+    const protocol = forwardedProto || 'https'
+    return `${protocol}://${forwardedHost}${path}`
+  }
+
+  // 备用方案 - 使用 host header
+  if (host) {
+    return `https://${host}${path}`
+  }
+
+  // 最后的备用方案 - 使用环境变量
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
+  if (baseUrl) {
+    const url = baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`
+    return `${url}${path}`
+  }
+
+  // 如果所有方法都失败，使用 request URL 的 origin
+  const { origin } = new URL(request.url)
+  return `${origin}${path}`
 }
