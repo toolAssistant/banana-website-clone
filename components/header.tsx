@@ -1,7 +1,12 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { createClient } from "@/lib/supabase/server"
+import { UserNav } from "./user-nav"
 
-export function Header() {
+export async function Header() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
@@ -23,7 +28,13 @@ export function Header() {
             FAQ
           </Link>
         </nav>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Start Editing</Button>
+        {user ? (
+          <UserNav user={user} />
+        ) : (
+          <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Link href="/auth/signin">登录</Link>
+          </Button>
+        )}
       </div>
     </header>
   )
