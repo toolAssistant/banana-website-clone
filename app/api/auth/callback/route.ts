@@ -6,6 +6,14 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get('code')
   const next = requestUrl.searchParams.get('next') ?? '/'
 
+  console.log('🔍 [callback] Full URL:', request.url)
+  console.log('🔍 [callback] Code:', code)
+  console.log('🔍 [callback] Headers:', {
+    'x-forwarded-host': request.headers.get('x-forwarded-host'),
+    'x-forwarded-proto': request.headers.get('x-forwarded-proto'),
+    'host': request.headers.get('host'),
+  })
+
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
@@ -13,12 +21,16 @@ export async function GET(request: Request) {
     if (!error) {
       // 获取正确的重定向 URL
       const redirectUrl = getRedirectUrl(request, next)
+      console.log('🔍 [callback] Redirect URL:', redirectUrl)
       return NextResponse.redirect(redirectUrl)
+    } else {
+      console.error('🔍 [callback] exchangeCodeForSession error:', error)
     }
   }
 
   // 返回用户到错误页面
   const errorUrl = getRedirectUrl(request, '/auth/auth-code-error')
+  console.log('🔍 [callback] Error redirect URL:', errorUrl)
   return NextResponse.redirect(errorUrl)
 }
 
