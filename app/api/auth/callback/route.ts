@@ -29,9 +29,9 @@ function getRedirectUrl(request: Request, path: string): string {
   const host = request.headers.get('host')
 
   // 开发环境
-  if (process.env.NODE_ENV === 'development') {
-    return `http://localhost:3000${path}`
-  }
+  // if (process.env.NODE_ENV === 'development') {
+  //   return `http://localhost:3000${path}`
+  // }
 
   // 生产环境 - 优先使用 forwarded headers
   if (forwardedHost) {
