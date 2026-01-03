@@ -24,6 +24,9 @@ export async function Header() {
           <Link href="#showcase" className="text-sm font-medium hover:text-primary transition-colors">
             Showcase
           </Link>
+          <Link href="/pricing" className="text-sm font-medium hover:text-primary transition-colors">
+            Pricing
+          </Link>
           <Link href="#faq" className="text-sm font-medium hover:text-primary transition-colors">
             FAQ
           </Link>
