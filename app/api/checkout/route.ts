@@ -5,6 +5,7 @@ const CREEM_TEST_MODE = process.env.CREEM_TEST_MODE === "true"
 const CREEM_API_URL = CREEM_TEST_MODE
   ? "https://test-api.creem.io"
   : "https://api.creem.io"
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
 
 const PRODUCT_IDS = {
   Hobby: process.env.CREEM_PRODUCT_HOBBY,
@@ -34,6 +35,8 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         product_id: productId,
+        // Creem会自动在URL中添加checkout_id等参数,不需要占位符
+        success_url: `${SITE_URL}/payment/success`,
         metadata: {
           plan,
           billingCycle
