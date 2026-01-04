@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -19,7 +19,7 @@ interface PaymentInfo {
   webhookProcessed?: boolean
 }
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -202,5 +202,24 @@ export default function PaymentSuccessPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-blue-50 dark:from-slate-950 dark:to-slate-900">
+          <Card className="w-full max-w-md">
+            <CardContent className="pt-6 flex flex-col items-center gap-4">
+              <Loader2 className="size-12 animate-spin text-primary" />
+              <p className="text-lg">加载中...</p>
+            </CardContent>
+          </Card>
+        </div>
+      }
+    >
+      <PaymentSuccessContent />
+    </Suspense>
   )
 }
